@@ -10,29 +10,16 @@ function MyForm3() {
     alert(`Hello, ${firstName} ${lastName}`);
     event.preventDefault();
   }
-
-  const handleFirstNameChange = (event) => {
-    setFirstName(event.target.value);
-  }
-
-  const handleLastNameChange = (event) => {
-    setLastName(event.target.value);
-  }
-
-  const handleEamilChange = (event) => {
-    setEmail(event.target.value);
-  }
-
   return(
     <form onSubmit={handleSubmit}>
       <label>First Name : </label>
-      <input type="text" name='firstName' onChange={handleFirstNameChange} value={firstName}/>
+      <input type="text" onChange={e=> setFirstName(e.target.value)}/>
       <br />
       <label>Last Name : </label>
-      <input type="text" name='lastName' onChange={handleLastNameChange} value={lastName}/>
+      <input type="text" onChange={e=> setLastName(e.target.value)}/>
       <br />
       <label>Email : </label>
-      <input type="text" name='email' onChange={handleEamilChange} value={email}/>
+      <input type="text" onChange={e=> setEmail(e.target.value)}/>
       <br />
       <input type="submit" value='클릭하세요'/>
       <br /> <br />
