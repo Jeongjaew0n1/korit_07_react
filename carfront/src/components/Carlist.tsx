@@ -1,18 +1,54 @@
-import axios from "axios";
-import { CarResponse } from "../types";
-import { useQuery } from "@tanstack/react-query";
+// import { CarResponse } from "../types"; table 태그에서는 data.map() 때문에 필요했지만, x-data-grid 사용 이후로는 필요 없습니다.
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getCars, deleteCar } from "../api/carapi"
+import { DataGrid, GridColDef, GridCellParams } from "@mui/x-data-grid";
+import { Snackbar } from "@mui/material";
+import { useState } from "react";
 
 function Carlist() {
-  const getCars = async(): Promise<CarResponse[]> => {
-    const response = await axios.get("http://localhost:8080/api/cars");
-    
-    return response.data._embedded.cars;
-  }
-
+  const queryClient = useQueryClient();
+  const [ open, setOpen ] = useState(false);
+  
   const { data, error, isSuccess } = useQuery({
     queryKey: ['cars'],
     queryFn: getCars
   });
+
+  const { mutate } = useMutation(deleteCar, {
+    onSuccess: () => {
+      setOpen(true);
+      queryClient.invalidateQueries({ queryKey:[`cars`] }); // 이 부분은 useQuery()를 정의한 부분과 관련있습니다.
+    },
+    onError: err => {
+      console.log(err);
+    }
+  })
+
+  const columns: GridColDef[] = [
+    {field: 'brand', headerName: 'Brand', width: 200},
+    {field: 'model', headerName: 'Model', width: 200},
+    {field: 'color', headerName: 'Color', width: 200},
+    {field: 'registrationNumber', headerName: 'Reg.nr', width: 150},
+    {field: 'modelYear', headerName: 'Model Year', width: 150},
+    {field: 'price', headerName: 'Price', width: 150},
+    {
+      field: 'delete',
+      headerName: '',
+      width: 90,
+      sortable: false,
+      filterable: false,
+      disableColumnMenu: true,
+      renderCell: (params: GridCellParams) => (
+          <button
+            onClick={() => {
+              if (confirm(`${params.row.brand}의 ${params.row.model} 자동차를 삭제하시겠습니까?`)) {
+                mutate(params.row._links.self.href);
+              }}}>
+            Delete
+          </button>
+      ),
+    }
+  ]
 
   if(!isSuccess) {
     return <span>Loading...⏱️</span>
@@ -23,21 +59,34 @@ function Carlist() {
   }
   else {
     return (
-      <table>
-        <tbody>
-          {
-            data.map((car: CarResponse) =>
-            <tr key={car._links.self.href}>
-              <td>{car.brand}</td>
-              <td>{car.model}</td>
-              <td>{car.color}</td>
-              <td>{car.registrationNumber}</td>
-              <td>{car.modelYear}</td>
-              <td>{car.price}</td>
-            </tr>)
-          }
-        </tbody>
-      </table>
+      // <table>
+      //   <tbody>
+      //     {
+      //       data.map((car: CarResponse) =>
+      //       <tr key={car._links.self.href}>
+      //         <td>{car.brand}</td>
+      //         <td>{car.model}</td>
+      //         <td>{car.color}</td>
+      //         <td>{car.registrationNumber}</td>
+      //         <td>{car.modelYear}</td>
+      //         <td>{car.price}</td>
+      //       </tr>)
+      //     }
+      //   </tbody>
+      // </table>
+      <>
+        <DataGrid
+          rows={data}
+          columns={columns}
+          getRowId={row => row._links.self.href}
+        />
+        <Snackbar
+          open={open}
+          autoHideDuration={2000}
+          onClose={()=>setOpen(false)}
+          message='선택한 자동차 정보가 삭제되었습니다.🚓'
+        />
+      </>
     )
   }
 }
