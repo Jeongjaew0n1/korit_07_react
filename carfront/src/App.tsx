@@ -7,7 +7,7 @@ const queryClient = new QueryClient();
 function App() {
 
   return (
-    <Container maxWidth='xl'>
+    <Container maxWidth="xl">
       <CssBaseline />
       <AppBar position="static">
         <Toolbar>
